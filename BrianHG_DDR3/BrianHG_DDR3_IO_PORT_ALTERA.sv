@@ -69,7 +69,7 @@ parameter bit        CMD_ADD_DLY             = 0,                // ************
 parameter int        RDQ_SYNC_CHAIN          = CMD_ADD_DLY,      // ****************** Use 0 to minimize Logic Cell / LUT count. ***************************
                                                                  // Adds # of FIFO logic cell steps in the DDR input to help increase FMAX for the DDR_CLK_RDQ domain and crossing to the DDR_CK domain.
 
-parameter int        WDQ_SYNC_CHAIN          = 3 + CMD_ADD_DLY - WDQ_CLK_270 ;// + ((CLK_KHZ_IN*CLK_IN_MULT/CLK_IN_DIV)>=450000),  
+parameter int        WDQ_SYNC_CHAIN          = 3 + CMD_ADD_DLY - WDQ_CLK_270, // + ((CLK_KHZ_IN*CLK_IN_MULT/CLK_IN_DIV)>=450000),  
                                                                  // MAXIMUM & Optimum = 4 + CMD_ADD_DLY - WDQ_CLK_270 + ((CLK_KHZ_IN*CLK_IN_MULT/CLK_IN_DIV)>=450000),
                                                                  // Shifts the position of the clock transition from DDR_CLK to DDR_CLK_WDQ of the write data FIFO path to the DQ pins.
 

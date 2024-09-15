@@ -5,6 +5,14 @@
 // CMD_CLK system clock which can be configured to: 
 //
 //
+// Version 1.4, April 8, 2024
+//   *** New, added Arria V and Cyclone V PLL frequencies to 1Ghz / 2gtps.
+//
+// Version 1.3, April 5, 2024
+//   *** New, added Arria V GX, GT, SX, ST, GZ pll support to line 288 & selecting which PLL at line 335.
+//       Also added a $stop & $error message if the FPGA_FAMILY is Unknown at line 310.
+//
+//
 // Version 1.2, August 26, 2021
 //
 // This version now output the individual DDR3_CLK, DDR3_CLK_WDQ, DDR3_CLK_RDQ,
@@ -282,12 +290,17 @@ localparam  DDR3_RDQ_PHASE_pss = Altera_Dummy_String[DDR3_RDQ_PHASE_ps] ;
 // Another workaround of mine which looks utterly stupid, but the only possible way to get it to function.
 
 localparam FPGA_FAMILY_string = (FPGA_FAMILY=="Arria II GX")   ? "Arria II GX"   :
+                                (FPGA_FAMILY=="Arria V GZ")    ? "Arria V GZ"    :
+                                (FPGA_FAMILY=="Arria V GX")    ? "Arria V GX"    :
+                                (FPGA_FAMILY=="Arria V GT")    ? "Arria V GT"    :
+                                (FPGA_FAMILY=="Arria V SX")    ? "Arria V SX"    :
+                                (FPGA_FAMILY=="Arria V ST")    ? "Arria V ST"    :
                                 (FPGA_FAMILY=="Cyclone III")   ? "Cyclone III"   :
                                 (FPGA_FAMILY=="Cyclone IV E")  ? "Cyclone IV E"  :
                                 (FPGA_FAMILY=="Cyclone V")     ? "Cyclone V"     :
                                 (FPGA_FAMILY=="MAX 10")        ? "MAX 10"        :
                                 (FPGA_FAMILY=="Cyclone 10 LP") ? "Cyclone 10 LP" :
-                                                                 "MAX 10"          ;
+                                                                 "Unknown"       ;
 
 wire [4:0]  PLL1_clk_out;    // PLL has 5 outputs.
 
@@ -297,11 +310,33 @@ generate
 // ******************************************************************************************************************************************
 if (FPGA_VENDOR[0] == "A" || FPGA_VENDOR[0] == "a" || FPGA_VENDOR[0] == "I" || FPGA_VENDOR[0] == "i") begin 
 
+
+if (FPGA_FAMILY_string=="Unknown") initial begin
+$display("****************************************");
+$display("*** BrianHG_DDR3_PLL PARAMETER ERROR ***");
+$display("**************************************************************************");
+$display("*** BrianHG_DDR3_PLL parameter .FPGA_FAMILY(%s) is not supported.    ***",(FPGA_FAMILY));
+$display("*** Only these FPGA are currently recognized:                        ***");
+$display("***                                                                  ***");
+$display("***   Arria II GX                                                    ***");
+$display("***   Arria V GZ                                                     ***");
+$display("***   Arria V GX                                                     ***");
+$display("***   Arria V GT                                                     ***");
+$display("***   Arria V SX                                                     ***");
+$display("***   Arria V ST                                                     ***");
+$display("***   Cyclone III                                                    ***");
+$display("***   Cyclone IV E                                                   ***");
+$display("***   Cyclone V                                                      ***");
+$display("***   MAX 10                                                         ***");
+$display("***   Cyclone 10 LP                                                  ***");
+$warning("**************************************************************************");
+$error;
+$stop;
+
 // ****************************************************************************************
 // *** Begin Initiate DDR3 clock Altera PLL for Cyclone III/IV/10LP/MAX 10/Arria II  ******
 // ****************************************************************************************
-
-if (FPGA_FAMILY!="Cyclone V") begin
+end else if (FPGA_FAMILY!="Cyclone V" && FPGA_FAMILY!="Arria V GZ" && FPGA_FAMILY!="Arria V GX" && FPGA_FAMILY!="Arria V GT" && FPGA_FAMILY!="Arria V SX" && FPGA_FAMILY!="Arria V ST") begin
  altpll #(
 
   .bandwidth_type ("AUTO"),           .inclk0_input_frequency (PLL1_inps),  .compensate_clock ("CLK0"),         .lpm_hint ("CBX_MODULE_PREFIX=BrianHG_DDR3_PLL"),
@@ -359,7 +394,23 @@ $error;
 $stop;
 end
 
-localparam  C100 = (PLL1_OUT_TRUE_KHZ==600000) ? "600.000000 MHz" :
+localparam  C100 = (PLL1_OUT_TRUE_KHZ==1000000)? "1000.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==975000) ? "975.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==950000) ? "950.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==925000) ? "925.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==900000) ? "900.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==875000) ? "875.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==850000) ? "850.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==825000) ? "825.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==800000) ? "800.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==775000) ? "775.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==750000) ? "750.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==725000) ? "725.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==700000) ? "700.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==675000) ? "675.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==650000) ? "650.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==625000) ? "625.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==600000) ? "600.000000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==575000) ? "575.000000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==550000) ? "550.000000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==525000) ? "525.000000 MHz" :
@@ -375,7 +426,23 @@ localparam  C100 = (PLL1_OUT_TRUE_KHZ==600000) ? "600.000000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==275000) ? "275.000000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==250000) ? "250.000000 MHz" : 0 ;
 
-localparam  C101 = (PLL1_OUT_TRUE_KHZ==600000) ? "600.000001 MHz" :
+localparam  C101 = (PLL1_OUT_TRUE_KHZ==1000000)? "1000.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==975000) ? "975.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==950000) ? "950.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==925000) ? "925.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==900000) ? "900.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==875000) ? "875.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==850000) ? "850.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==825000) ? "825.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==800000) ? "800.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==775000) ? "775.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==750000) ? "750.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==725000) ? "725.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==700000) ? "700.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==675000) ? "675.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==650000) ? "650.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==625000) ? "625.000001 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==600000) ? "600.000001 MHz" :
                    (PLL1_OUT_TRUE_KHZ==575000) ? "575.000001 MHz" :
                    (PLL1_OUT_TRUE_KHZ==550000) ? "550.000001 MHz" :
                    (PLL1_OUT_TRUE_KHZ==525000) ? "525.000001 MHz" :
@@ -391,7 +458,23 @@ localparam  C101 = (PLL1_OUT_TRUE_KHZ==600000) ? "600.000001 MHz" :
                    (PLL1_OUT_TRUE_KHZ==275000) ? "275.000001 MHz" :
                    (PLL1_OUT_TRUE_KHZ==250000) ? "250.000001 MHz" : 0 ;
 
-localparam  C050 = (PLL1_OUT_TRUE_KHZ==600000) ? "300.000000 MHz" :
+localparam  C050 = (PLL1_OUT_TRUE_KHZ==1000000)? "500.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==975000) ? "487.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==950000) ? "475.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==925000) ? "462.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==900000) ? "450.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==875000) ? "437.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==850000) ? "425.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==825000) ? "412.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==800000) ? "400.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==775000) ? "387.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==750000) ? "375.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==725000) ? "362.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==700000) ? "350.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==675000) ? "337.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==650000) ? "325.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==625000) ? "312.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==600000) ? "300.000000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==575000) ? "287.500000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==550000) ? "275.000000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==525000) ? "262.500000 MHz" :
@@ -407,7 +490,23 @@ localparam  C050 = (PLL1_OUT_TRUE_KHZ==600000) ? "300.000000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==275000) ? "137.500000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==250000) ? "125.000000 MHz" : 0 ;
 
-localparam  C025 = (PLL1_OUT_TRUE_KHZ==600000) ? "150.000000 MHz" :
+localparam  C025 = (PLL1_OUT_TRUE_KHZ==1000000)? "250.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==975000) ? "243.750000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==950000) ? "237.500000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==925000) ? "231.250000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==900000) ? "225.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==875000) ? "218.750000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==850000) ? "212.500000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==825000) ? "206.250000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==800000) ? "200.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==775000) ? "193.750000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==750000) ? "187.500000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==725000) ? "181.250000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==700000) ? "175.000000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==675000) ? "168.750000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==650000) ? "162.500000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==625000) ? "156.250000 MHz" :
+                   (PLL1_OUT_TRUE_KHZ==600000) ? "150.000000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==575000) ? "143.750000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==550000) ? "137.500000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==525000) ? "131.250000 MHz" :
@@ -416,12 +515,12 @@ localparam  C025 = (PLL1_OUT_TRUE_KHZ==600000) ? "150.000000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==450000) ? "112.500000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==425000) ? "106.250000 MHz" :
                    (PLL1_OUT_TRUE_KHZ==400000) ? "100.000000 MHz" :
-                   (PLL1_OUT_TRUE_KHZ==375000) ? "93.750000 MHz"  :
-                   (PLL1_OUT_TRUE_KHZ==350000) ? "87.500000 MHz"  :
-                   (PLL1_OUT_TRUE_KHZ==325000) ? "81.250000 MHz"  :
-                   (PLL1_OUT_TRUE_KHZ==300000) ? "75.000000 MHz"  :
-                   (PLL1_OUT_TRUE_KHZ==275000) ? "68.750000 MHz"  :
-                   (PLL1_OUT_TRUE_KHZ==250000) ? "62.500000 MHz"  : 0 ;
+                   (PLL1_OUT_TRUE_KHZ==375000) ?  "93.750000 MHz"  :
+                   (PLL1_OUT_TRUE_KHZ==350000) ?  "87.500000 MHz"  :
+                   (PLL1_OUT_TRUE_KHZ==325000) ?  "81.250000 MHz"  :
+                   (PLL1_OUT_TRUE_KHZ==300000) ?  "75.000000 MHz"  :
+                   (PLL1_OUT_TRUE_KHZ==275000) ?  "68.750000 MHz"  :
+                   (PLL1_OUT_TRUE_KHZ==250000) ?  "62.500000 MHz"  : 0 ;
 
 // ****************************************************
 // ***  Unknown Cyclone V output frequency ************
@@ -430,10 +529,12 @@ if (C100 == 0 )  initial begin
 $warning("****************************************");
 $warning("*** BrianHG_DDR3_PLL PARAMETER ERROR ***");
 $warning("************************************************************************************");
-$warning("*** BrianHG_DDR3_PLL Cyclone V output frequency %d MHz is not supported.       ***",12'(PLL1_OUT_TRUE_KHZ/1000));
-$warning("*** Please change the .CLK_IN_MULT and .CLK_IN_DIV parameters so that the output ***");
-$warning("*** frequency is 250, 275, 300, 325, 350, 375, 400, 425, 450, 475 or 500 MHz.    ***");
-$warning("************************************************************************************");
+$warning("*** BrianHG_DDR3_PLL Cyclone V/Arria V output frequency %d MHz is not supported. ***",12'(PLL1_OUT_TRUE_KHZ/1000));
+$warning("*** Please change the .CLK_IN_MULT and .CLK_IN_DIV parameters so that the output        ***");
+$warning("*** frequency is 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500, 525,            ***");
+$warning("***              550, 575, 600, 625, 650, 675, 700, 725, 750, 775, 800, 825,            ***");
+$warning("***              850, 875, 900, 925, 950, 975, or 1000 MHz.                             ***");
+$warning("*******************************************************************************************");
 $error;
 $stop;
 end
@@ -451,9 +552,9 @@ if (W_CPMP == 8 )  initial begin
 $warning("****************************************");
 $warning("*** BrianHG_DDR3_PLL PARAMETER ERROR ***");
 $warning("**************************************************************************");
-$warning("*** BrianHG_DDR3_PLL Cyclone V .DDR3_WDQ_PHASE(%d) is not supported. ***",10'(DDR3_WDQ_PHASE));
-$warning("*** Only 0, 45, 90, 135, 180, 225, 270, 315 deg. are allowed.          ***");
-$warning("**************************************************************************");
+$warning("*** BrianHG_DDR3_PLL Cyclone V/Arria V .DDR3_WDQ_PHASE(%d) is not supported. ***",10'(DDR3_WDQ_PHASE));
+$warning("*** Only 0, 45, 90, 135, 180, 225, 270, 315 deg. are allowed.                 ***");
+$warning("*********************************************************************************");
 $error;
 $stop;
 end
@@ -462,9 +563,9 @@ if (DDR3_RDQ_PHASE != 0 )  initial begin
 $warning("****************************************");
 $warning("*** BrianHG_DDR3_PLL PARAMETER ERROR ***");
 $warning("**************************************************************************");
-$warning("*** BrianHG_DDR3_PLL Cyclone V .DDR3_RDQ_PHASE(%d) is not supported. ***",10'(DDR3_RDQ_PHASE));
-$warning("*** Only 0 deg. is allowed.                                            ***");
-$warning("**************************************************************************");
+$warning("*** BrianHG_DDR3_PLL Cyclone V/Arria V .DDR3_RDQ_PHASE(%d) is not supported. ***",10'(DDR3_RDQ_PHASE));
+$warning("*** Only 0 deg. is allowed.                                                   ***");
+$warning("*********************************************************************************");
 $error;
 $stop;
 end
@@ -588,19 +689,21 @@ assign     CMD_CLK     = PLL1_clk_out[CMD_CLK_SEL] ;
 
 generate
 initial begin
-$warning("*****************************");
-$warning("*** BrianHG_DDR3_PLL Info ***");
-$warning("*********************************************");
-$warning("***      CLK_IN           = %d MHz.     ***",12'(CLK_KHZ_IN/1000));
-$warning("***      DDR3_RDQ/WDQ     = %d MTPS.    ***",12'(PLL1_OUT_TRUE_KHZ/500));
-$warning("***      DDR3_CLK/RDQ/WDQ = %d MHz.     ***",12'(PLL1_OUT_TRUE_KHZ/1000));
-$warning("***      DDR3_WDQ_PHASE   = %d degrees. ***",10'(DDR3_WDQ_PHASE));
-$warning("*** True DDR3_WDQ_PHASE   =  %s ps.     ***",DDR3_WDQ_PHASE_pss);
-$warning("***      DDR3_RDQ_PHASE   = %d degrees. ***",10'(DDR3_RDQ_PHASE));
-$warning("*** True DDR3_RDQ_PHASE   =  %s ps.     ***",DDR3_RDQ_PHASE_pss);
-$warning("***      CMD_CLK          = %d MHz.     ***",12'(PLL1_OUT_CMD_CLK_KHZ/1000));
-$warning("***      DDR3_CLK_50      = %d MHz.     ***",12'(PLL1_OUT_TRUE_KHZ/2000));
-$warning("***      DDR3_CLK_25      = %d MHz.     ***",12'(PLL1_OUT_TRUE_KHZ/4000));
+$display("*****************************");
+$display("*** BrianHG_DDR3_PLL Info ***");
+$display("*********************************************");
+$display("***      FPGA_VENDOR      = %s.     ***",FPGA_VENDOR);
+$display("***      FPGA_FAMILY      = %s.     ***",FPGA_FAMILY);
+$display("***      CLK_IN           = %d MHz.     ***",12'(CLK_KHZ_IN/1000));
+$display("***      DDR3_RDQ/WDQ     = %d MTPS.    ***",12'(PLL1_OUT_TRUE_KHZ/500));
+$display("***      DDR3_CLK/RDQ/WDQ = %d MHz.     ***",12'(PLL1_OUT_TRUE_KHZ/1000));
+$display("***      DDR3_WDQ_PHASE   = %d degrees. ***",10'(DDR3_WDQ_PHASE));
+$display("*** True DDR3_WDQ_PHASE   =  %s ps.     ***",DDR3_WDQ_PHASE_pss);
+$display("***      DDR3_RDQ_PHASE   = %d degrees. ***",10'(DDR3_RDQ_PHASE));
+$display("*** True DDR3_RDQ_PHASE   =  %s ps.     ***",DDR3_RDQ_PHASE_pss);
+$display("***      CMD_CLK          = %d MHz.     ***",12'(PLL1_OUT_CMD_CLK_KHZ/1000));
+$display("***      DDR3_CLK_50      = %d MHz.     ***",12'(PLL1_OUT_TRUE_KHZ/2000));
+$display("***      DDR3_CLK_25      = %d MHz.     ***",12'(PLL1_OUT_TRUE_KHZ/4000));
 $warning("*********************************************");
 end
 endgenerate

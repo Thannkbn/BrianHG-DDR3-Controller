@@ -237,8 +237,8 @@ logic [bits-1    :0] fifo_mem [0:words-1] =  '{default:'0};
 // Combinational logic.
 always_comb begin
 
-    shift_in_safe  = shift_in ;// && data_ready;
-    shift_out_safe = shift_out;// && count_ready[PTR_BITS+1];
+    shift_in_safe  = shift_in  ;//&& data_ready;
+    shift_out_safe = shift_out && count_ready[PTR_BITS+1];
 
     full           = count_full[PTR_BITS+1] ;
 
